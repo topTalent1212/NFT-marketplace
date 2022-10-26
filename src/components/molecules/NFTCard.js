@@ -55,6 +55,7 @@ const useStyles = makeStyles({
 })
 
 async function getAndSetListingFee (marketplaceContract, setListingFee) {
+  if (!marketplaceContract) return
   const listingFee = await marketplaceContract.getListingFee()
   setListingFee(ethers.utils.formatUnits(listingFee, 'ether'))
 }
@@ -83,6 +84,10 @@ export default function NFTCard ({ nft, action, updateNFT }) {
       text: 'cancel',
       method: cancelNft
     },
+    approve: {
+      text: 'Approve for selling',
+      method: approveNft
+    },
     sell: {
       text: listingFee ? `Sell (${listingFee} fee)` : 'Sell',
       method: sellNft
@@ -106,6 +111,13 @@ export default function NFTCard ({ nft, action, updateNFT }) {
     const transaction = await marketplaceContract.cancelMarketItem(nftContract.address, nft.marketItemId)
     await transaction.wait()
     updateNFT()
+  }
+
+  async function approveNft (nft) {
+    const approveTx = await nftContract.approve(marketplaceContract.address, nft.tokenId)
+    await approveTx.wait()
+    updateNFT()
+    return approveTx
   }
 
   async function sellNft (nft) {
